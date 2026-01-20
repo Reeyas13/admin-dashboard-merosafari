@@ -43,17 +43,17 @@ const Router = [
       //3rd party
       { path: '/email-config', element: <EmailConfigPage /> },
       { path: '/sms-config', element: <SMSConfigPage /> },
-      
+
       //vehicle
       { path: '/vehicle-type', element: <VehicleTypesPage /> },
       { path: '/drivers', element: <DriversListPage /> },
-  { path: '/drivers/:driverId', element: <DriverDetailPage /> },
-  { path: '/users', element: <UsersListPage /> },
-  { path: '/users/:userId', element: <UserDetailPage /> },
+      { path: '/drivers/:driverId', element: <DriverDetailPage /> },
+      { path: '/users', element: <UsersListPage /> },
+      { path: '/users/:userId', element: <UserDetailPage /> },
       //map & zones
       { path: '/map', element: <BoundariesPage /> },
       { path: '/zones', element: <ZonesPage /> }, // Add this route
-      
+
       { path: '/vehicle-management', element: <VehicleManagementPage /> },
       { path: '/pricing', element: <PricingManagementPage /> },
       { path: '/incentives', element: <IncentivesManagementPage /> },
@@ -61,7 +61,7 @@ const Router = [
         path: '/driver-verification',
         element: <DriverVerificationList />,
       },
-      
+
       {
         path: '/rides',
         element: <RidesListPage />,
@@ -74,7 +74,7 @@ const Router = [
         path: '/driver-verification/:verificationId',
         element: <DocumentReview />,
       },
-      
+
       //not found
       { path: '*', element: <Navigate to="/auth/404" /> },
     ],
