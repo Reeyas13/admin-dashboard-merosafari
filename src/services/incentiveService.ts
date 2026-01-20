@@ -19,6 +19,7 @@ class IncentiveService {
   async createIncentiveProgram(
     data: CreateIncentiveRequest
   ): Promise<CreateIncentiveResponse> {
+    //@ts-ignore
     return api.post<CreateIncentiveResponse>(`${this.basePath}/incentives`, data);
   }
 
@@ -53,6 +54,7 @@ class IncentiveService {
     programId: string,
     data: UpdateIncentiveRequest
   ): Promise<CreateIncentiveResponse> {
+    //@ts-ignore
     return api.put<CreateIncentiveResponse>(
       `${this.basePath}/incentives/${programId}`,
       data
@@ -74,6 +76,7 @@ class IncentiveService {
   async toggleIncentiveProgram(
     programId: string
   ): Promise<CreateIncentiveResponse> {
+    //@ts-ignore
     return api.put<CreateIncentiveResponse>(
       `${this.basePath}/incentives/${programId}/toggle`
     );

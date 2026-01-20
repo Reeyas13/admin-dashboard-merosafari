@@ -73,6 +73,7 @@ export const PointChecker: React.FC<PointCheckerProps> = ({ onLocationFound }) =
         setLoading(false);
       },
       (err) => {
+        console.error(err);
         setError('Failed to get current location');
         setLoading(false);
       }

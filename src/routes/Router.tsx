@@ -12,41 +12,26 @@ import PricingManagementPage from 'src/pages/PricingManagementPage';
 import IncentivesManagementPage from 'src/pages/IncentivesManagementPage';
 import DriverVerificationList from 'src/views/driver-verification/DriverVerificationList';
 import DocumentReview from 'src/views/driver-verification/DocumentReview';
-// import BoundaryDrawingPage from 'src/pages/BoundaryDrawingPage';
-
+import ZonesPage from 'src/pages/ZonesPage'; // Add this import
+import RidesListPage from 'src/pages/RidesListPage';
+import RideDetailPage from 'src/pages/RideDetailPage';
+import DriversListPage from 'src/pages/DriversListPage';
+import DriverDetailPage from 'src/pages/DriverDetailPage';
+import UsersListPage from 'src/pages/UsersListPage';
+import UserDetailPage from 'src/pages/UserDetailPage';
 /* ***Layouts**** */
 const FullLayout = Loadable(lazy(() => import('../layouts/full/FullLayout')));
 const BlankLayout = Loadable(lazy(() => import('../layouts/blank/BlankLayout')));
 
 // authentication
-
 const Login2 = Loadable(lazy(() => import('../views/authentication/auth2/Login')));
-
 const Register2 = Loadable(lazy(() => import('../views/authentication/auth2/Register')));
-
 const Maintainance = Loadable(lazy(() => import('../views/authentication/Maintainance')));
 
 // Dashboards
 const Modern = Loadable(lazy(() => import('../views/dashboards/Modern')));
 
-//pages
-// const UserProfile = Loadable(lazy(() => import('../views/pages/user-profile/UserProfile')));
-
-// /* ****Apps***** */
-// const Notes = Loadable(lazy(() => import('../views/apps/notes/Notes')));
-// const Form = Loadable(lazy(() => import('../views/utilities/form/Form')));
-// const Table = Loadable(lazy(() => import('../views/utilities/table/Table')));
-// const Tickets = Loadable(lazy(() => import('../views/apps/tickets/Tickets')));
-// const CreateTickets = Loadable(lazy(() => import('../views/apps/tickets/CreateTickets')));
-// const Blog = Loadable(lazy(() => import('../views/apps/blog/Blog')));
-// const BlogDetail = Loadable(lazy(() => import('../views/apps/blog/BlogDetail')));
-
 const Error = Loadable(lazy(() => import('../views/authentication/Error')));
-
-// // // icons
-// const SolarIcon = Loadable(lazy(() => import('../views/icons/SolarIcon')));
-
-// const SamplePage = lazy(() => import('../views/sample-page/SamplePage'));
 
 const Router = [
   {
@@ -54,15 +39,21 @@ const Router = [
     element: <FullLayout />,
     children: [
       { path: '/admin', exact: true, element: <Modern /> },
-      // { path: '/', exact: true, element: <SamplePage /> },
 
       //3rd party
       { path: '/email-config', element: <EmailConfigPage /> },
       { path: '/sms-config', element: <SMSConfigPage /> },
+      
       //vehicle
       { path: '/vehicle-type', element: <VehicleTypesPage /> },
-      //map
+      { path: '/drivers', element: <DriversListPage /> },
+  { path: '/drivers/:driverId', element: <DriverDetailPage /> },
+  { path: '/users', element: <UsersListPage /> },
+  { path: '/users/:userId', element: <UserDetailPage /> },
+      //map & zones
       { path: '/map', element: <BoundariesPage /> },
+      { path: '/zones', element: <ZonesPage /> }, // Add this route
+      
       { path: '/vehicle-management', element: <VehicleManagementPage /> },
       { path: '/pricing', element: <PricingManagementPage /> },
       { path: '/incentives', element: <IncentivesManagementPage /> },
@@ -70,14 +61,22 @@ const Router = [
         path: '/driver-verification',
         element: <DriverVerificationList />,
       },
+      
+      {
+        path: '/rides',
+        element: <RidesListPage />,
+      },
+      {
+        path: '/rides/:rideId',
+        element: <RideDetailPage />,
+      },
       {
         path: '/driver-verification/:verificationId',
         element: <DocumentReview />,
       },
+      
       //not found
       { path: '*', element: <Navigate to="/auth/404" /> },
-
-
     ],
   },
   {
@@ -85,9 +84,7 @@ const Router = [
     element: <BlankLayout />,
     children: [
       { path: '/auth/auth2/login', element: <Login2 /> },
-
       { path: '/auth/auth2/register', element: <Register2 /> },
-
       { path: '/auth/maintenance', element: <Maintainance /> },
       { path: '404', element: <Error /> },
       { path: '/auth/404', element: <Error /> },

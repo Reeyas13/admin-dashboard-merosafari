@@ -194,7 +194,7 @@ export const VehicleTypesList: React.FC<VehicleTypesListProps> = ({
                 </div>
                 {vehicleType.logo_url && (
                   <img
-                    src={vehicleType.logo_url}
+                    src={import.meta.env.VITE_API_URL + vehicleType.logo_url}
                     alt={vehicleType.name}
                     className="h-12 w-12 rounded object-cover"
                   />

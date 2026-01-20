@@ -90,6 +90,6 @@ class ApiClient {
 }
 
 // Create a single API client
-export const api = new ApiClient(import.meta.env.VITE_API_URL || 'http://localhost:8080');
+export const api = new ApiClient(import.meta.env.VITE_API_URL || 'http://localhost:8090');
 
 export default api;

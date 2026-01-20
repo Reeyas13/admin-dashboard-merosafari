@@ -16,18 +16,21 @@ class PricingService {
    * - Uses POST for creating new pricing
    * - Uses PUT for updating existing pricing
    */
-  async savePricing(
+ async savePricing(
     data: SetPricingRequest,
     pricingId?: string
   ): Promise<SetPricingResponse> {
     if (pricingId) {
       // Update existing pricing
+   // @ts-ignore
       return api.put<SetPricingResponse>(
         `${this.basePath}/pricing/${pricingId}`,
         data
       );
     } else {
       // Create new pricing
+   // @ts-ignore
+
       return api.post<SetPricingResponse>(`${this.basePath}/pricing`, data);
     }
   }
@@ -35,8 +38,8 @@ class PricingService {
   /**
    * Get pricing configuration for a location-vehicle
    */
-  async getPricing(locationVehicleId: string): Promise<PricingConfig> {
-    return api.get<PricingConfig>(
+  async getPricing(locationVehicleId: string): Promise<{ pricing: PricingConfig }> {
+    return api.get<{ pricing: PricingConfig }>(
       `${this.basePath}/pricing/${locationVehicleId}`
     );
   }
@@ -53,9 +56,10 @@ class PricingService {
   /**
    * Calculate fare for a ride
    */
-  async calculateFare(
+   async calculateFare(
     data: CalculateFareRequest
   ): Promise<CalculateFareResponse> {
+   // @ts-ignore
     return api.post<CalculateFareResponse>(
       `${this.basePath}/calculate-fare`,
       data

@@ -15,18 +15,20 @@ import { Input } from 'src/components/ui/input';
 import { Label } from 'src/components/ui/label';
 import { Switch } from 'src/components/ui/switch';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from 'src/components/ui/select';
+import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
 } from 'src/components/ui/dialog';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from 'src/components/ui/tooltip';
+
 import {
   DollarSign,
   Clock,
@@ -36,9 +38,14 @@ import {
   Save,
   Car,
   Award,
+  Shield,
 } from 'lucide-react';
 
-import { PricingConfig, CalculateFareRequest, CalculateFareResponse } from '../types/pricing';
+import {
+  PricingConfig,
+  CalculateFareRequest,
+  CalculateFareResponse,
+} from '../types/pricing';
 import { LocationVehicle } from '../types/locationVehicles';
 import { Boundary } from '../types/boundary';
 import { pricingService } from '../services/pricingService';
@@ -46,18 +53,14 @@ import { locationVehicleService } from '../services/locationVehicleService';
 import { boundaryService } from '../services/boundaryService';
 
 // Helper functions for time conversion
-// Converts ISO string → "HH:mm:ss"  (e.g. "0000-01-01T17:00:00Z" → "17:00:00")
 const isoToTime = (iso: string): string => {
   if (!iso) return '';
-  // Handle both full ISO and plain time strings
   const match = iso.match(/(\d{2}:\d{2}(:\d{2})?)/);
-  return match ? match[1].padEnd(8, ':00') : ''; // ensures seconds if missing
+  return match ? match[1].padEnd(8, ':00') : '';
 };
 
-// Converts "HH:mm:ss" (or "HH:mm") → ISO  (e.g. "17:00:00" → "0000-01-01T17:00:00Z")
 const timeToIso = (time: string): string => {
-  if (!time) return ''; // or null if your backend allows NULL
-  // Normalize: if user types "17:00", add seconds
+  if (!time) return '';
   return time.length === 5 ? `${time}:00` : time.trim();
 };
 
@@ -77,7 +80,6 @@ export const PricingManagementPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [calculatedFare, setCalculatedFare] = useState<CalculateFareResponse | null>(null);
 
-  // Use strings for controlled inputs to avoid issues with 0 values
   const [formData, setFormData] = useState({
     base_fare: '',
     per_km_rate: '',
@@ -85,6 +87,8 @@ export const PricingManagementPage: React.FC = () => {
     eta_waiting_charge_starts_after_minutes: '',
     service_tax_percentage: '',
     outside_service_area_charge: '',
+    insurance_charge_type: 'PERCENTAGE' as 'PERCENTAGE' | 'FIXED',
+    insurance_charge_value: '',
     peak_hour_multiplier: '',
     peak_hours_start: '',
     peak_hours_end: '',
@@ -160,17 +164,19 @@ export const PricingManagementPage: React.FC = () => {
     try {
       setLoading(true);
       const data = await pricingService.getPricing(selectedVehicle.id);
-
       setPricing(data.pricing);
-      console.log({ data });
 
       setFormData({
         base_fare: String(data.pricing.base_fare || 0),
         per_km_rate: String(data.pricing.per_km_rate || 0),
         waiting_time_per_minute: String(data.pricing.waiting_time_per_minute || 0),
-        eta_waiting_charge_starts_after_minutes: String(data.pricing.eta_waiting_charge_starts_after_minutes || 0),
+        eta_waiting_charge_starts_after_minutes: String(
+          data.pricing.eta_waiting_charge_starts_after_minutes || 0
+        ),
         service_tax_percentage: String(data.pricing.service_tax_percentage || 0),
         outside_service_area_charge: String(data.pricing.outside_service_area_charge || 0),
+        insurance_charge_type: data.pricing.insurance_charge_type as 'PERCENTAGE' | 'FIXED',
+        insurance_charge_value: String(data.pricing.insurance_charge_value || 0),
         peak_hour_multiplier: String(data.pricing.peak_hour_multiplier || 1.0),
         peak_hours_start: isoToTime(data.pricing.peak_hours_start || ''),
         peak_hours_end: isoToTime(data.pricing.peak_hours_end || ''),
@@ -186,6 +192,8 @@ export const PricingManagementPage: React.FC = () => {
         eta_waiting_charge_starts_after_minutes: '',
         service_tax_percentage: '',
         outside_service_area_charge: '',
+        insurance_charge_type: 'PERCENTAGE',
+        insurance_charge_value: '',
         peak_hour_multiplier: '1.0',
         peak_hours_start: '',
         peak_hours_end: '',
@@ -198,27 +206,26 @@ export const PricingManagementPage: React.FC = () => {
 
   const handleSave = async () => {
     if (!selectedVehicle) return;
-
     try {
       setSaving(true);
-      
       const pricingData = {
         location_vehicle_id: selectedVehicle.id,
         base_fare: parseFloat(formData.base_fare) || 0,
         per_km_rate: parseFloat(formData.per_km_rate) || 0,
         waiting_time_per_minute: parseFloat(formData.waiting_time_per_minute) || 0,
-        eta_waiting_charge_starts_after_minutes: parseInt(formData.eta_waiting_charge_starts_after_minutes) || 0,
+        eta_waiting_charge_starts_after_minutes:
+          parseInt(formData.eta_waiting_charge_starts_after_minutes) || 0,
         service_tax_percentage: parseFloat(formData.service_tax_percentage) || 0,
         outside_service_area_charge: parseFloat(formData.outside_service_area_charge) || 0,
+        insurance_charge_type: formData.insurance_charge_type,
+        insurance_charge_value: parseFloat(formData.insurance_charge_value) || 0,
         peak_hour_multiplier: parseFloat(formData.peak_hour_multiplier) || 1.0,
         peak_hours_start: timeToIso(formData.peak_hours_start),
         peak_hours_end: timeToIso(formData.peak_hours_end),
         is_active: formData.is_active,
       };
 
-      // If pricing exists (has an ID), use PUT to update, otherwise POST to create
       await pricingService.savePricing(pricingData, pricing?.id);
-
       await loadPricing();
       alert('Pricing saved successfully!');
     } catch (err: any) {
@@ -230,7 +237,6 @@ export const PricingManagementPage: React.FC = () => {
 
   const handleCalculateFare = async () => {
     if (!selectedBoundary || !selectedVehicle) return;
-
     try {
       const request: CalculateFareRequest = {
         location_boundary_id: selectedBoundary.id,
@@ -255,354 +261,373 @@ export const PricingManagementPage: React.FC = () => {
   );
 
   return (
-    <TooltipProvider>
-      <div className="p-6 space-y-6">
-        {/* Breadcrumb */}
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/admin">Dashboard</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/map">Locations</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Pricing Management</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+      {/* Breadcrumb */}
+      <Breadcrumb className="mb-6">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/">Dashboard</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/locations">Locations</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Pricing Management</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <DollarSign className="h-7 w-7 text-primary" />
-              Pricing Management
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Configure fare structures for each vehicle type in each location
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/vehicle-management')}
-            >
-              <Car className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/incentives')}
-            >
-              <Award className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowCalculator(true)}
-              disabled={!selectedVehicle}
-            >
-              <Calculator className="h-4 w-4 mr-2" />
-              Calculate Fare
-            </Button>
-          </div>
+      {/* Header */}
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold text-slate-900 mb-2">
+            <DollarSign className="inline mr-3 text-green-600" size={40} />
+            Pricing Management
+          </h1>
+          <p className="text-slate-600">
+            Configure fare structures for each vehicle type in each location
+          </p>
         </div>
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={() => navigate('/vehicle-management')}>
+            <Car className="mr-2" size={18} />
+            Manage Vehicles
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/incentives')}>
+            <Award className="mr-2" size={18} />
+            Manage Incentives
+          </Button>
+          <Button
+            variant="default"
+            onClick={() => setShowCalculator(true)}
+            disabled={!selectedVehicle}
+          >
+            <Calculator className="mr-2" size={18} />
+            Calculate Fare
+          </Button>
+        </div>
+      </div>
 
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Sidebar */}
-          <div className="lg:col-span-3 space-y-4">
+      {/* Main Grid */}
+      <div className="grid grid-cols-12 gap-6">
+        {/* Sidebar */}
+        <div className="col-span-3 space-y-6">
+          <Card className="p-4">
+            <h3 className="font-semibold mb-3 flex items-center gap-2">
+              <MapPin size={18} />
+              Select Location
+            </h3>
+            <Input
+              placeholder="Search locations..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="mb-3"
+            />
+            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+              {filteredBoundaries.map((b) => (
+                <Card
+                  key={b.id}
+                  className={`p-3 cursor-pointer hover:bg-slate-50 transition ${
+                    selectedBoundary?.id === b.id ? 'border-2 border-blue-500 bg-blue-50' : ''
+                  }`}
+                  onClick={() => setSelectedBoundary(b)}
+                >
+                  <div className="font-medium">{b.name}</div>
+                  <div className="text-sm text-slate-500">{b.district}</div>
+                </Card>
+              ))}
+            </div>
+          </Card>
+
+          {selectedBoundary && (
             <Card className="p-4">
               <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-primary" />
-                Select Location
+                <Car size={18} />
+                Select Vehicle
               </h3>
-              <Input
-                placeholder="Search locations..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="mb-3"
-              />
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {filteredBoundaries.map((b) => (
-                  <div
-                    key={b.id}
-                    className={`p-3 rounded border cursor-pointer transition-all ${
-                      selectedBoundary?.id === b.id
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary/50'
+              <div className="space-y-2">
+                {vehicles.map((v) => (
+                  <Card
+                    key={v.id}
+                    className={`p-3 cursor-pointer hover:bg-slate-50 transition ${
+                      selectedVehicle?.id === v.id ? 'border-2 border-blue-500 bg-blue-50' : ''
                     }`}
-                    onClick={() => setSelectedBoundary(b)}
+                    onClick={() => setSelectedVehicle(v)}
                   >
-                    <div className="font-medium">{b.name}</div>
-                    <div className="text-xs text-muted-foreground">{b.district}</div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            {selectedBoundary && (
-              <Card className="p-4">
-                <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  <Car className="h-4 w-4 text-primary" />
-                  Select Vehicle
-                </h3>
-                <div className="space-y-2">
-                  {vehicles.map((v) => (
-                    <div
-                      key={v.id}
-                      className={`p-3 rounded border cursor-pointer transition-all ${
-                        selectedVehicle?.id === v.id
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                      onClick={() => setSelectedVehicle(v)}
-                    >
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium">{v.vehicle_type_name}</span>
-                        <Badge variant={v.is_enabled ? 'default' : 'secondary'}>
-                          {v.is_enabled ? 'Active' : 'Inactive'}
-                        </Badge>
-                      </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{v.vehicle_type_name}</span>
+                      <Badge variant={v.is_enabled ? 'default' : 'secondary'}>
+                        {v.is_enabled ? 'Active' : 'Inactive'}
+                      </Badge>
                     </div>
-                  ))}
-                  {vehicles.length === 0 && (
-                    <p className="text-center text-muted-foreground py-4">
-                      No vehicles configured
-                    </p>
-                  )}
-                </div>
-              </Card>
-            )}
-          </div>
-
-          {/* Pricing Form */}
-          <div className="lg:col-span-9">
-            {selectedVehicle ? (
-              <div className="space-y-6">
-                <Card className="p-5 bg-primary/5 border-primary">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h2 className="text-xl font-semibold">
-                        {selectedVehicle.vehicle_type_name} — {selectedBoundary?.name}
-                      </h2>
-                      <p className="text-sm text-muted-foreground">
-                        Pricing configuration {pricing?.id ? `(ID: ${pricing.id})` : '(New)'}
-                      </p>
-                    </div>
-                    <Badge variant={formData.is_active ? 'default' : 'secondary'}>
-                      {formData.is_active ? 'Active' : 'Inactive'}
-                    </Badge>
-                  </div>
-                </Card>
-
-                {loading ? (
-                  <Card className="p-12 text-center">
-                    <div className="animate-spin h-8 w-8 border-4 border-primary rounded-full mx-auto border-t-transparent" />
-                    <p className="mt-4 text-muted-foreground">Loading pricing...</p>
                   </Card>
-                ) : (
-                  <>
-                    {/* Base Pricing */}
-                    <Card className="p-6">
-                      <h4 className="font-semibold mb-4 flex items-center gap-2">
-                        <DollarSign className="h-5 w-5 text-primary" />
-                        Base Pricing
-                      </h4>
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div>
-                          <Label>Base Fare (NPR)</Label>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={formData.base_fare}
-                            onChange={(e) =>
-                              setFormData({ ...formData, base_fare: e.target.value })
-                            }
-                          />
-                        </div>
-                        <div>
-                          <Label>Per KM Rate (NPR)</Label>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={formData.per_km_rate}
-                            onChange={(e) =>
-                              setFormData({ ...formData, per_km_rate: e.target.value })
-                            }
-                          />
-                        </div>
-                      </div>
-                    </Card>
-
-                    {/* Waiting Charges */}
-                    <Card className="p-6">
-                      <h4 className="font-semibold mb-4 flex items-center gap-2">
-                        <Clock className="h-5 w-5 text-primary" />
-                        Waiting Time
-                      </h4>
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div>
-                          <Label>Per Minute Rate (NPR)</Label>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={formData.waiting_time_per_minute}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                waiting_time_per_minute: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-                        <div>
-                          <Label>Free Waiting (minutes)</Label>
-                          <Input
-                            type="number"
-                            value={formData.eta_waiting_charge_starts_after_minutes}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                eta_waiting_charge_starts_after_minutes: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-                      </div>
-                    </Card>
-
-                    {/* Additional Charges */}
-                    <Card className="p-6">
-                      <h4 className="font-semibold mb-4 flex items-center gap-2">
-                        <MapPin className="h-5 w-5 text-primary" />
-                        Additional Charges
-                      </h4>
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div>
-                          <Label>Outside Area Charge (NPR)</Label>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={formData.outside_service_area_charge}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                outside_service_area_charge: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-                        <div>
-                          <Label>Service Tax (%)</Label>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={formData.service_tax_percentage}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                service_tax_percentage: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-                      </div>
-                    </Card>
-
-                    {/* Peak Hours */}
-                    <Card className="p-6">
-                      <h4 className="font-semibold mb-4 flex items-center gap-2">
-                        <TrendingUp className="h-5 w-5 text-primary" />
-                        Peak Hours
-                      </h4>
-                      <div className="grid md:grid-cols-3 gap-4">
-                        <div>
-                          <Label>Multiplier</Label>
-                          <Input
-                            type="number"
-                            step="0.1"
-                            value={formData.peak_hour_multiplier}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                peak_hour_multiplier: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-                        <div>
-                          <Label>Start Time (HH:mm:ss)</Label>
-                          <Input
-                            type="text"
-                            placeholder="17:00:00"
-                            value={formData.peak_hours_start}
-                            onChange={(e) =>
-                              setFormData({ ...formData, peak_hours_start: e.target.value })
-                            }
-                          />
-                        </div>
-                        <div>
-                          <Label>End Time (HH:mm:ss)</Label>
-                          <Input
-                            type="text"
-                            placeholder="20:00:00"
-                            value={formData.peak_hours_end}
-                            onChange={(e) =>
-                              setFormData({ ...formData, peak_hours_end: e.target.value })
-                            }
-                          />
-                        </div>
-                      </div>
-                    </Card>
-
-                    {/* Save */}
-                    <Card className="p-6">
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-4">
-                          <Switch
-                            checked={formData.is_active}
-                            onCheckedChange={(c) => setFormData({ ...formData, is_active: c })}
-                          />
-                          <div>
-                            <p className="font-medium">Pricing Active</p>
-                            <p className="text-sm text-muted-foreground">
-                              Customers can book with this pricing
-                            </p>
-                          </div>
-                        </div>
-                        <Button onClick={handleSave} disabled={saving}>
-                          <Save className="h-4 w-4 mr-2" />
-                          {saving ? 'Saving...' : pricing?.id ? 'Update Pricing' : 'Create Pricing'}
-                        </Button>
-                      </div>
-                    </Card>
-                  </>
+                ))}
+                {vehicles.length === 0 && (
+                  <div className="text-center py-4 text-slate-500">No vehicles configured</div>
                 )}
               </div>
-            ) : (
-              <Card className="p-12 text-center">
-                <DollarSign className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">Select a Vehicle</h3>
-                <p className="text-muted-foreground">
-                  Choose a location and vehicle to manage its pricing
-                </p>
-              </Card>
-            )}
-          </div>
+            </Card>
+          )}
         </div>
 
-        {/* Fare Calculator Dialog */}
-        <Dialog open={showCalculator} onOpenChange={setShowCalculator}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Fare Calculator</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
+        {/* Pricing Form */}
+        <div className="col-span-9">
+          {selectedVehicle ? (
+            <Card className="p-6">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold flex items-center gap-3">
+                  {selectedVehicle.vehicle_type_name} — {selectedBoundary?.name}
+                </h2>
+                <p className="text-slate-600">
+                  Pricing configuration {pricing?.id ? `(ID: ${pricing.id})` : '(New)'}
+                </p>
+                <Badge variant={formData.is_active ? 'default' : 'secondary'} className="mt-2">
+                  {formData.is_active ? 'Active' : 'Inactive'}
+                </Badge>
+              </div>
+
+              {loading ? (
+                <div className="text-center py-12">
+                  <div className="text-slate-500">Loading pricing...</div>
+                </div>
+              ) : (
+                <>
+                  {/* Base Pricing */}
+                  <div className="grid md:grid-cols-2 gap-6 mb-6">
+                    <div className="space-y-4">
+                      <h3 className="font-semibold text-lg flex items-center gap-2">
+                        <DollarSign size={18} />
+                        Base Pricing
+                      </h3>
+                      <div>
+                        <Label>Base Fare (NPR)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.base_fare}
+                          onChange={(e) =>
+                            setFormData({ ...formData, base_fare: e.target.value })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label>Per KM Rate (NPR)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.per_km_rate}
+                          onChange={(e) =>
+                            setFormData({ ...formData, per_km_rate: e.target.value })
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    {/* Waiting Charges */}
+                    <div className="space-y-4">
+                      <h3 className="font-semibold text-lg flex items-center gap-2">
+                        <Clock size={18} />
+                        Waiting Time
+                      </h3>
+                      <div>
+                        <Label>Per Minute Rate (NPR)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.waiting_time_per_minute}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              waiting_time_per_minute: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label>Free Waiting (minutes)</Label>
+                        <Input
+                          type="number"
+                          value={formData.eta_waiting_charge_starts_after_minutes}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              eta_waiting_charge_starts_after_minutes: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Additional Charges */}
+                  <div className="grid md:grid-cols-2 gap-6 mb-6">
+                    <div className="space-y-4">
+                      <h3 className="font-semibold text-lg">Additional Charges</h3>
+                      <div>
+                        <Label>Outside Area Charge (NPR)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.outside_service_area_charge}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              outside_service_area_charge: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label>Service Tax (%)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.service_tax_percentage}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              service_tax_percentage: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    {/* Insurance */}
+                    <div className="space-y-4">
+                      <h3 className="font-semibold text-lg flex items-center gap-2">
+                        <Shield size={18} />
+                        Insurance
+                      </h3>
+                      <div>
+                        <Label>Insurance Type</Label>
+                        <Select
+                          value={formData.insurance_charge_type}
+                          onValueChange={(value: 'PERCENTAGE' | 'FIXED') =>
+                            setFormData({ ...formData, insurance_charge_type: value })
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="PERCENTAGE">Percentage (%)</SelectItem>
+                            <SelectItem value="FIXED">Fixed Amount (NPR)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>
+                          Insurance Value (
+                          {formData.insurance_charge_type === 'PERCENTAGE' ? '%' : 'NPR'})
+                        </Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.insurance_charge_value}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              insurance_charge_value: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Peak Hours */}
+                  <div className="mb-6">
+                    <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                      <TrendingUp size={18} />
+                      Peak Hours
+                    </h3>
+                    <div className="grid md:grid-cols-3 gap-4">
+                      <div>
+                        <Label>Multiplier</Label>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          value={formData.peak_hour_multiplier}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              peak_hour_multiplier: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label>Start Time (HH:mm:ss)</Label>
+                        <Input
+                          type="time"
+                          step="1"
+                          value={formData.peak_hours_start}
+                          onChange={(e) =>
+                            setFormData({ ...formData, peak_hours_start: e.target.value })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label>End Time (HH:mm:ss)</Label>
+                        <Input
+                          type="time"
+                          step="1"
+                          value={formData.peak_hours_end}
+                          onChange={(e) =>
+                            setFormData({ ...formData, peak_hours_end: e.target.value })
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Save */}
+                  <div className="flex items-center justify-between pt-6 border-t">
+                    <div className="flex items-center gap-3">
+                      <Switch
+                        checked={formData.is_active}
+                        onCheckedChange={(c) => setFormData({ ...formData, is_active: c })}
+                      />
+                      <div>
+                        <div className="font-medium">Pricing Active</div>
+                        <div className="text-sm text-slate-500">
+                          Customers can book with this pricing
+                        </div>
+                      </div>
+                    </div>
+                    <Button onClick={handleSave} disabled={saving} size="lg">
+                      <Save className="mr-2" size={18} />
+                      {saving
+                        ? 'Saving...'
+                        : pricing?.id
+                        ? 'Update Pricing'
+                        : 'Create Pricing'}
+                    </Button>
+                  </div>
+                </>
+              )}
+            </Card>
+          ) : (
+            <Card className="p-12 text-center">
+              <Car className="mx-auto mb-4 text-slate-300" size={64} />
+              <h3 className="text-xl font-semibold mb-2">Select a Vehicle</h3>
+              <p className="text-slate-600">Choose a location and vehicle to manage its pricing</p>
+            </Card>
+          )}
+        </div>
+      </div>
+
+      {/* Fare Calculator Dialog */}
+      <Dialog open={showCalculator} onOpenChange={setShowCalculator}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Fare Calculator</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label>Distance (km)</Label>
                 <Input
@@ -627,7 +652,9 @@ export const PricingManagementPage: React.FC = () => {
                   }
                 />
               </div>
-              <div className="flex items-center gap-3">
+            </div>
+            <div className="flex gap-4">
+              <div className="flex items-center gap-2">
                 <Switch
                   checked={fareCalc.is_outside_service_area}
                   onCheckedChange={(c) =>
@@ -636,72 +663,72 @@ export const PricingManagementPage: React.FC = () => {
                 />
                 <Label>Outside Service Area</Label>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <Switch
                   checked={fareCalc.is_peak_hour}
                   onCheckedChange={(c) => setFareCalc({ ...fareCalc, is_peak_hour: c })}
                 />
                 <Label>Peak Hour</Label>
               </div>
-
-              <Button onClick={handleCalculateFare} className="w-full">
-                <Calculator className="h-4 w-4 mr-2" />
-                Calculate
-              </Button>
-
-              {calculatedFare && (
-                <Card className="p-4 bg-primary/5">
-                  <h4 className="font-semibold mb-3">Fare Breakdown</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Base Fare</span>
-                      <span>NPR {calculatedFare.base_fare.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>
-                        Distance ({(calculatedFare.distance_fare / calculatedFare.per_km_rate || 0).toFixed(1)} km)
-                      </span>
-                      <span>NPR {calculatedFare.distance_fare.toFixed(2)}</span>
-                    </div>
-                    {calculatedFare.waiting_fare > 0 && (
-                      <div className="flex justify-between">
-                        <span>Waiting Time</span>
-                        <span>NPR {calculatedFare.waiting_fare.toFixed(2)}</span>
-                      </div>
-                    )}
-                    {calculatedFare.outside_area_charge > 0 && (
-                      <div className="flex justify-between">
-                        <span>Outside Area</span>
-                        <span>NPR {calculatedFare.outside_area_charge.toFixed(2)}</span>
-                      </div>
-                    )}
-                    {calculatedFare.peak_hour_surcharge > 0 && (
-                      <div className="flex justify-between text-orange-600">
-                        <span>Peak Hour Surcharge</span>
-                        <span>NPR {calculatedFare.peak_hour_surcharge.toFixed(2)}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span>Service Tax</span>
-                      <span>NPR {calculatedFare.service_tax.toFixed(2)}</span>
-                    </div>
-                    <div className="border-t pt-2 flex justify-between font-bold text-lg">
-                      <span>Total Fare</span>
-                      <span>NPR {calculatedFare.total_fare.toFixed(2)}</span>
-                    </div>
-                  </div>
-                </Card>
-              )}
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowCalculator(false)}>
-                Close
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-    </TooltipProvider>
+            <Button onClick={handleCalculateFare} className="w-full">
+              Calculate
+            </Button>
+
+            {calculatedFare && (
+              <Card className="p-4 bg-slate-50">
+                <h4 className="font-semibold mb-3">Fare Breakdown</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Base Fare</span>
+                    <span>NPR {calculatedFare.base_fare.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Distance</span>
+                    <span>NPR {calculatedFare.distance_fare.toFixed(2)}</span>
+                  </div>
+                  {calculatedFare.waiting_fare > 0 && (
+                    <div className="flex justify-between">
+                      <span>Waiting Time</span>
+                      <span>NPR {calculatedFare.waiting_fare.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {calculatedFare.outside_area_charge > 0 && (
+                    <div className="flex justify-between">
+                      <span>Outside Area</span>
+                      <span>NPR {calculatedFare.outside_area_charge.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {calculatedFare.peak_hour_surcharge > 0 && (
+                    <div className="flex justify-between">
+                      <span>Peak Hour Surcharge</span>
+                      <span>NPR {calculatedFare.peak_hour_surcharge.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span>Service Tax</span>
+                    <span>NPR {calculatedFare.service_tax.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Insurance</span>
+                    <span>NPR {calculatedFare.insurance_charge.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-lg pt-2 border-t">
+                    <span>Total Fare</span>
+                    <span>NPR {calculatedFare.total_fare.toFixed(2)}</span>
+                  </div>
+                </div>
+              </Card>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCalculator(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 

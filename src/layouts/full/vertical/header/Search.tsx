@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Icon } from '@iconify/react';
-import SidebarContent, { ChildItem, MenuItem } from '../sidebar/sidebaritems';
+import SidebarContent from '../sidebar/sidebaritems';
 import { Link } from 'react-router';
 import SimpleBar from 'simplebar-react';
 import { Input } from 'src/components/ui/input';
@@ -16,10 +16,10 @@ function Search() {
   const [query, setQuery] = useState('');
 
   // 🔍 Recursive search through menu
-  const searchItems = (items: (MenuItem | ChildItem)[], q: string, parentPath = ''): SearchResult[] => {
+  const searchItems = (items: any, q: string, parentPath = ''): SearchResult[] => {
     let results: SearchResult[] = [];
 
-    items.forEach((item) => {
+    items.forEach((item:any) => {
       const currentPath = parentPath ? `${parentPath} → ${item.name}` : item.name;
 
       // If match found

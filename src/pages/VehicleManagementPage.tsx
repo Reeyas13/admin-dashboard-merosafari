@@ -96,7 +96,7 @@ const VehiclePreview: React.FC<{ vehicleType: VehicleType | null }> = ({ vehicle
               <ambientLight intensity={0.6} />
               <directionalLight position={[10, 10, 5]} intensity={1.2} />
               <directionalLight position={[-10, -10, -5]} intensity={0.3} />
-              <Model3D modelUrl={"http://localhost:8080" + vehicleType.model_url} />
+              <Model3D modelUrl={import.meta.env.VITE_API_URL + vehicleType.model_url} />
               <OrbitControls 
                 enableZoom={true} 
                 autoRotate 
@@ -115,7 +115,7 @@ const VehiclePreview: React.FC<{ vehicleType: VehicleType | null }> = ({ vehicle
       {vehicleType.logo_url && (
         <div className="relative">
           <img
-            src={"http://localhost:8080" + vehicleType.logo_url}
+            src={import.meta.env.VITE_API_URL + vehicleType.logo_url}
             alt={vehicleType.name}
             className="w-full h-32 object-contain bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800"
           />
@@ -260,18 +260,18 @@ export const VehicleManagementPage: React.FC = () => {
     }
   };
 
-  const handleToggleVehicle = async (vehicleId: string) => {
-    if (!selectedBoundary) return;
-    try {
-      await locationVehicleService.toggleVehicleStatus(
-        selectedBoundary.id,
-        vehicleId
-      );
-      loadVehicles();
-    } catch (error: any) {
-      alert(error.message || 'Failed to toggle vehicle status');
-    }
-  };
+  // const handleToggleVehicle = async (vehicleId: string) => {
+  //   if (!selectedBoundary) return;
+  //   try {
+  //     await locationVehicleService.toggleVehicleStatus(
+  //       selectedBoundary.id,
+  //       vehicleId
+  //     );
+  //     loadVehicles();
+  //   } catch (error: any) {
+  //     alert(error.message || 'Failed to toggle vehicle status');
+  //   }
+  // };
 
   const handleDeleteVehicle = async (vehicleId: string) => {
     if (!selectedBoundary) return;
@@ -478,7 +478,7 @@ export const VehicleManagementPage: React.FC = () => {
                                 <div className="h-12 w-12 rounded-lg bg-lightprimary flex items-center justify-center">
                                   {vehicle.vehicle_type?.logo_url ? (
                                     <img
-                                      src={"http://localhost:8080" + vehicle.vehicle_type.logo_url}
+                                      src={import.meta.env.VITE_API_URL + vehicle.vehicle_type.logo_url}
                                       alt={vehicle.vehicle_type_name}
                                       className="h-10 w-10 object-contain"
                                     />

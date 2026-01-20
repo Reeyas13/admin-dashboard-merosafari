@@ -1,8 +1,5 @@
-// services/locationVehicleService.ts
-
 import { api } from 'src/api/api';
 import {
-  LocationVehicle,
   AddLocationVehicleRequest,
   AddLocationVehicleResponse,
   LocationVehiclesResponse,
@@ -19,7 +16,7 @@ class LocationVehicleService {
     boundaryId: string,
     data: AddLocationVehicleRequest
   ): Promise<AddLocationVehicleResponse> {
-    //@ts-ignore
+  //@ts-ignore
     return api.post<AddLocationVehicleResponse>(
       `${this.basePath}/${boundaryId}/vehicles`,
       data
@@ -40,6 +37,7 @@ class LocationVehicleService {
       page: String(page),
       page_size: String(pageSize),
     });
+
     return api.get<LocationVehiclesResponse>(
       `${this.basePath}/${boundaryId}/vehicles?${params}`
     );
@@ -52,9 +50,8 @@ class LocationVehicleService {
     boundaryId: string,
     vehicleId: string,
     data: UpdateLocationVehicleRequest
-  ): Promise<AddLocationVehicleResponse> {
-    //@ts-ignore
-    return api.put<AddLocationVehicleResponse>(
+  ): Promise<{ success: boolean; message: string }> {
+    return api.put<{ success: boolean; message: string }>(
       `${this.basePath}/${boundaryId}/vehicles/${vehicleId}`,
       data
     );
@@ -66,8 +63,8 @@ class LocationVehicleService {
   async removeVehicleFromLocation(
     boundaryId: string,
     vehicleId: string
-  ): Promise<{ message: string }> {
-    return api.delete<{ message: string }>(
+  ): Promise<{ success: boolean; message: string }> {
+    return api.delete<{ success: boolean; message: string }>(
       `${this.basePath}/${boundaryId}/vehicles/${vehicleId}`
     );
   }
@@ -78,13 +75,13 @@ class LocationVehicleService {
   async toggleVehicleStatus(
     boundaryId: string,
     vehicleId: string
-  ): Promise<AddLocationVehicleResponse> {
-    //@ts-ignore
-    return api.put<AddLocationVehicleResponse>(
+  ): Promise<{ success: boolean; message: string; is_enabled: boolean }> {
+  //@ts-ignore
+    return api.put<{ success: boolean; message: string; is_enabled: boolean }>(
       `${this.basePath}/${boundaryId}/vehicles/${vehicleId}/toggle`
     );
   }
 }
 
 export const locationVehicleService = new LocationVehicleService();
-export default locationVehicleService;
+export default locationVehicleService;  

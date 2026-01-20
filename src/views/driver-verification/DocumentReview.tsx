@@ -5,12 +5,10 @@ import {
   ArrowLeft,
   CheckCircle,
   XCircle,
-  Clock,
   Eye,
   Loader2,
   AlertCircle,
   FileText,
-  Car,
   Shield,
   Camera,
   User,
@@ -21,7 +19,7 @@ import * as Avatar from '@radix-ui/react-avatar';
 import { toast } from 'react-toastify';
 import { driverService } from '../../services/driver.service';
 import { VerificationDetail, Document, DocumentStatus } from '../../types/driver.types';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Card, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 
 const DocumentReview: React.FC = () => {

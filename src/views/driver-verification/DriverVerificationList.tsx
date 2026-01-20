@@ -15,7 +15,7 @@ import {
 import { toast } from 'react-toastify';
 import { driverService } from '../../services/driver.service';
 import { PendingVerification } from '../../types/driver.types';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Card, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 
 const DriverVerificationList: React.FC = () => {
@@ -143,7 +143,7 @@ const DriverVerificationList: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-800">
-                {verifications.length === 0 ? (
+                {!Array.isArray(verifications)  ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-12 text-center">
                       <FileCheck className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
@@ -153,7 +153,7 @@ const DriverVerificationList: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  verifications.map((verification) => (
+                  Array.isArray(verifications) && verifications.map((verification) => (
                     <tr 
                       key={verification.verification_id}
                       className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"

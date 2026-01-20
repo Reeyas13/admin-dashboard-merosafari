@@ -128,7 +128,7 @@ export const calculatePolygonArea = (polygon: number[][]): number => {
  */
 export const simplifyPolygon = (
   polygon: number[][],
-  tolerance: number = 0.001
+  // tolerance: number = 0.001
 ): number[][] => {
   if (polygon.length <= 3) return polygon;
 

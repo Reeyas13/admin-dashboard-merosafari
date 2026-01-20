@@ -27,6 +27,13 @@ const SidebarContent = [
         isPro: false,
       },
       {
+        name: 'Zone Management',
+        icon: 'solar:map-arrow-square-linear',
+        id: uniqueId(),
+        url: '/zones',
+        isPro: false,
+      },
+      {
         name: 'Vehicle Management',
         icon: 'solar:bus-linear',
         id: uniqueId(),
@@ -69,6 +76,13 @@ const SidebarContent = [
         isPro: false,
         badge: 'pending',
       },
+        {
+      name: 'Users',
+      icon: 'solar:user-linear',
+      id: uniqueId(),
+      url: '/users',
+      isPro: false,
+    },
     ],
   },
 
@@ -81,6 +95,18 @@ const SidebarContent = [
         icon: 'solar:transmission-linear',
         id: uniqueId(),
         url: '/vehicle-type',
+        isPro: false,
+      },
+    ],
+  },
+  {
+    heading: 'Rides',
+    children: [
+      {
+        name: 'Rides',
+        icon: 'solar:routing-2-linear',
+        id: uniqueId(),
+        url: '/rides',
         isPro: false,
       },
     ],

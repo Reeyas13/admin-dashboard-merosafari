@@ -53,7 +53,7 @@ class DriverService {
    * Get full image URL
    */
   getImageUrl(documentUrl: string): string {
-    const baseUrl = import.meta.env.VITE_BASE_PATH || 'http://localhost:8080';
+    const baseUrl = import.meta.env.VITE_BASE_PATH || 'http://localhost:8090';
     return `${baseUrl}${documentUrl}`;
   }
 }

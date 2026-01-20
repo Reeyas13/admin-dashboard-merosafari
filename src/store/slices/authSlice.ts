@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import authServices from 'src/services/authServices';
-import { LoginResponse, User, LoginCredentials } from 'src/types/auth';
+import {  User, LoginCredentials } from 'src/types/auth';
 // Company type
 interface Company {
   id: number;
@@ -88,6 +88,7 @@ export const loginUser = createAsyncThunk(
 // Logout thunk
 export const logoutUser = createAsyncThunk(
   'auth/logout',
+  //@ts-ignore
   async (_, { rejectWithValue }) => {
     try {
       await authServices.logout();

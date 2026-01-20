@@ -50,6 +50,8 @@ import {
   Car,
   Copy,
   Filter,
+  Check,
+  X,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -260,14 +262,14 @@ export const IncentivesManagementPage: React.FC = () => {
     return variants[type] || 'default';
   };
 
-  const getRewardTypeBadgeVariant = (type: RewardType) => {
-    const variants: Record<RewardType, any> = {
-      FIXED_AMOUNT: 'success',
-      PERCENTAGE: 'info',
-      PER_RIDE_BONUS: 'warning',
-    };
-    return variants[type] || 'default';
-  };
+  // const getRewardTypeBadgeVariant = (type: RewardType) => {
+  //   const variants: Record<RewardType, any> = {
+  //     FIXED_AMOUNT: 'success',
+  //     PERCENTAGE: 'info',
+  //     PER_RIDE_BONUS: 'warning',
+  //   };
+  //   return variants[type] || 'default';
+  // };
 
   const filteredBoundaries = boundaries.filter(
     (b) =>

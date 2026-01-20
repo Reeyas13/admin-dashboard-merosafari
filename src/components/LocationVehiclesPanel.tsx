@@ -24,13 +24,12 @@ import {
 import {
   Car,
   Plus,
-  Settings,
-  ToggleLeft,
   ToggleRight,
   Clock,
   Users,
   DollarSign,
   Award,
+  ToggleLeft,
 } from 'lucide-react';
 import { LocationVehicle } from '../types/locationVehicles';
 import { VehicleType } from '../types/vehicleTypes';

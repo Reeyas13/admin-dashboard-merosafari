@@ -11,6 +11,7 @@ export interface VehicleType {
   is_active: boolean;
   created_at: string;
   capacity:number;
+  model_url?: string;
 }
 
 export interface VehicleTypesResponse {

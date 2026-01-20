@@ -12,6 +12,9 @@ export interface LocationVehicle {
     description?: string;
     capacity: number;
     icon?: string;
+    logo_url?: string;
+    slug: string;
+    no_of_seats: number;
   };
   is_enabled: boolean;
   min_drivers_required: number;

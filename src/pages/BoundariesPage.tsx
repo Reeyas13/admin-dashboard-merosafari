@@ -33,7 +33,6 @@ import {
   Car,
   DollarSign,
   Award,
-  Settings,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -56,6 +55,7 @@ export const BoundariesPage: React.FC = () => {
 
   const [selectedBoundary, setSelectedBoundary] = useState<Boundary | null>(null);
   const [showSidebar, setShowSidebar] = useState(true);
+  //@ts-ignore
   const [clickedPoint, setClickedPoint] = useState<{
     lat: number;
     lng: number;

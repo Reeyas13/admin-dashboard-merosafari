@@ -1,10 +1,8 @@
-// components/VehicleTypeForm.tsx
-
 import React, { useState } from 'react';
 import { vehicleTypeService } from '../services/vehicleTypeService';
 import { CreateVehicleTypeRequest, VehicleType } from '../types/vehicleTypes';
 import { Button } from 'src/components/ui/button';
-import { X } from 'lucide-react';
+import { X, Upload, FileIcon } from 'lucide-react';
 
 interface VehicleTypeFormProps {
   vehicleType?: VehicleType;
@@ -26,6 +24,10 @@ export const VehicleTypeForm: React.FC<VehicleTypeFormProps> = ({
     per_km_rate: vehicleType?.per_km_rate || 0,
     is_active: vehicleType?.is_active ?? true,
   });
+  
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [modelFile, setModelFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string>(vehicleType?.logo_url || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,16 +62,99 @@ export const VehicleTypeForm: React.FC<VehicleTypeFormProps> = ({
     }));
   };
 
+  // Handle logo file selection with validation
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type (PNG, SVG)
+    const validLogoTypes = ['image/png', 'image/svg+xml'];
+    if (!validLogoTypes.includes(file.type)) {
+      setError('Logo must be a PNG or SVG file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Logo file size must be less than 5MB');
+      return;
+    }
+
+    setLogoFile(file);
+    setError(null);
+
+    // Create preview for PNG files
+    if (file.type === 'image/png') {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setLogoPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setLogoPreview(''); // SVG preview can be added if needed
+    }
+  };
+
+  // Handle 3D model file selection with validation
+  const handleModelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type (GLB, GLTF, FBX, OBJ)
+    const validModelTypes = [
+      'model/gltf-binary',
+      'model/gltf+json',
+      'application/octet-stream', // GLB files often have this MIME type
+    ];
+    const validExtensions = ['.glb', '.gltf', '.fbx', '.obj'];
+    const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+
+    if (!validModelTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
+      setError('Model must be a GLB, GLTF, FBX, or OBJ file');
+      return;
+    }
+
+    // Validate file size (max 50MB)
+    if (file.size > 50 * 1024 * 1024) {
+      setError('Model file size must be less than 50MB');
+      return;
+    }
+
+    setModelFile(file);
+    setError(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
+      // Create FormData object
+      const submitData = new FormData();
+
+      // Append text fields
+      submitData.append('name', formData.name);
+      submitData.append('slug', formData.slug);
+      submitData.append('no_of_seats', formData.no_of_seats.toString());
+      submitData.append('base_fare', formData.base_fare.toString());
+      submitData.append('per_km_rate', formData.per_km_rate.toString());
+      submitData.append('is_active', formData.is_active.toString());
+
+      // Append logo file if selected
+      if (logoFile) {
+        submitData.append('logo', logoFile, logoFile.name);
+      }
+
+      // Append model file if selected
+      if (modelFile) {
+        submitData.append('model', modelFile, modelFile.name);
+      }
+
       if (vehicleType) {
-        await vehicleTypeService.updateVehicleType(vehicleType.id, formData);
+        await vehicleTypeService.updateVehicleType(vehicleType.id, submitData);
       } else {
-        await vehicleTypeService.createVehicleType(formData);
+        await vehicleTypeService.createVehicleType(submitData);
       }
       onSuccess();
     } catch (err: any) {
@@ -157,21 +242,6 @@ export const VehicleTypeForm: React.FC<VehicleTypeFormProps> = ({
               />
             </div>
 
-            {/* Logo URL */}
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Logo URL
-              </label>
-              <input
-                type="url"
-                name="logo_url"
-                value={formData.logo_url}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
-                placeholder="https://example.com/logo.png"
-              />
-            </div>
-
             {/* Base Fare */}
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
@@ -190,7 +260,7 @@ export const VehicleTypeForm: React.FC<VehicleTypeFormProps> = ({
             </div>
 
             {/* Per KM Rate */}
-            <div>
+            <div className="md:col-span-2">
               <label className="block text-sm font-medium text-foreground mb-2">
                 Per KM Rate (₹) <span className="text-error">*</span>
               </label>
@@ -204,6 +274,61 @@ export const VehicleTypeForm: React.FC<VehicleTypeFormProps> = ({
                 step="0.01"
                 className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
               />
+            </div>
+
+            {/* Logo Upload */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Logo (PNG or SVG) <span className="text-error">*</span>
+              </label>
+              <div className="flex items-center gap-4">
+                <label className="flex-1 flex items-center justify-center px-4 py-2 border-2 border-dashed rounded-md cursor-pointer hover:border-primary transition-colors">
+                  <Upload className="h-5 w-5 mr-2 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    {logoFile ? logoFile.name : 'Choose logo file'}
+                  </span>
+                  <input
+                    type="file"
+                    accept=".png,.svg"
+                    onChange={handleLogoChange}
+                    className="hidden"
+                  />
+                </label>
+                {logoPreview && (
+                  <div className="w-16 h-16 border rounded-md overflow-hidden">
+                    <img
+                      src={logoPreview}
+                      alt="Logo preview"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Max size: 5MB. Accepted formats: PNG, SVG
+              </p>
+            </div>
+
+            {/* 3D Model Upload */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
+                3D Model (GLB, GLTF, FBX, OBJ)
+              </label>
+              <label className="flex items-center justify-center px-4 py-2 border-2 border-dashed rounded-md cursor-pointer hover:border-primary transition-colors">
+                <FileIcon className="h-5 w-5 mr-2 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
+                  {modelFile ? modelFile.name : 'Choose 3D model file'}
+                </span>
+                <input
+                  type="file"
+                  accept=".glb,.gltf,.fbx,.obj"
+                  onChange={handleModelChange}
+                  className="hidden"
+                />
+              </label>
+              <p className="text-xs text-muted-foreground mt-1">
+                Max size: 50MB. Accepted formats: GLB, GLTF, FBX, OBJ
+              </p>
             </div>
 
             {/* Is Active */}

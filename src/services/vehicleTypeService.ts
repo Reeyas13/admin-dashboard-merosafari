@@ -19,14 +19,19 @@ class VehicleTypeService {
   }
 
   /**
-   * Create a new vehicle type
+   * Create a new vehicle type with multipart form data
    */
-  async createVehicleType(
-    data: CreateVehicleTypeRequest
-  ): Promise<any> {
+  async createVehicleType(data: FormData | CreateVehicleTypeRequest): Promise<any> {
+    const isFormData = data instanceof FormData;
+    
     return api.post<CreateVehicleTypeResponse>(
       `${this.basePath}/vehicle-types`,
-      data
+      data,
+      isFormData ? {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      } : undefined
     );
   }
 
@@ -38,15 +43,22 @@ class VehicleTypeService {
   }
 
   /**
-   * Update a vehicle type
+   * Update a vehicle type with multipart form data
    */
   async updateVehicleType(
     id: string,
-    data: Partial<CreateVehicleTypeRequest>
+    data: FormData | Partial<CreateVehicleTypeRequest>
   ): Promise<any> {
+    const isFormData = data instanceof FormData;
+    
     return api.put<CreateVehicleTypeResponse>(
       `${this.basePath}/admin/vehicle-types/${id}`,
-      data
+      data,
+      isFormData ? {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      } : undefined
     );
   }
 
