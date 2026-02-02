@@ -64,6 +64,11 @@ class DriverService {
   async getDriver(driverId: string): Promise<GetDriverDetailResponse> {
     return api.get<GetDriverDetailResponse>(`/api/v1/admin/drivers/${driverId}`);
   }
+
+  async deleteDriver(driverId: string): Promise<void> {
+    //@ts-ignore
+    return api.delete(`/api/v1/admin/users/${driverId}`);
+  }
 }
 
 export const driverService = new DriverService();

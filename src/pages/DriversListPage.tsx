@@ -19,7 +19,15 @@ import {
   TableHeader,
   TableRow,
 } from 'src/components/ui/table';
-import { Car, Eye, RefreshCw, ChevronLeft, ChevronRight, Shield } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from 'src/components/ui/dialog';
+import { Car, Eye, RefreshCw, ChevronLeft, ChevronRight, Shield, Trash2, AlertTriangle } from 'lucide-react';
 import { driverService, DriverDetail } from '../services/driverService';
 
 const statusConfig = {
@@ -39,6 +47,9 @@ export const DriversListPage: React.FC = () => {
   const navigate = useNavigate();
   const [drivers, setDrivers] = useState<DriverDetail[]>([]);
   const [loading, setLoading] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [driverToDelete, setDriverToDelete] = useState<DriverDetail | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
     page_size: 20,
@@ -64,6 +75,38 @@ export const DriversListPage: React.FC = () => {
 
   const handlePageChange = (newPage: number) => {
     setPagination((prev) => ({ ...prev, page: newPage }));
+  };
+
+  const handleDeleteClick = (driver: DriverDetail) => {
+    setDriverToDelete(driver);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!driverToDelete) return;
+
+    try {
+      setDeleting(true);
+      await driverService.deleteDriver(driverToDelete.user.id);
+      
+      // Remove driver from the list
+      setDrivers((prev) => prev.filter((d) => d.user.id !== driverToDelete.user.id));
+      setPagination((prev) => ({ ...prev, total: prev.total - 1 }));
+      
+      // Close dialog
+      setDeleteDialogOpen(false);
+      setDriverToDelete(null);
+    } catch (err) {
+      console.error('Failed to delete driver:', err);
+      alert('Failed to delete driver. Please try again.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setDriverToDelete(null);
   };
 
   const getStatusBadge = (status: string) => {
@@ -149,7 +192,7 @@ export const DriversListPage: React.FC = () => {
                 <TableHead>Verification</TableHead>
                 <TableHead>Vehicle</TableHead>
                 <TableHead>Joined</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -213,14 +256,25 @@ export const DriversListPage: React.FC = () => {
                       {new Date(driver.user.created_at).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => navigate(`/drivers/${driver.user.id}`)}
-                      >
-                        <Eye size={16} className="mr-1" />
-                        View
-                      </Button>
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => navigate(`/drivers/${driver.user.id}`)}
+                        >
+                          <Eye size={16} className="mr-1" />
+                          View
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                          onClick={() => handleDeleteClick(driver)}
+                        >
+                          <Trash2 size={16} className="mr-1" />
+                          Delete
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -259,6 +313,62 @@ export const DriversListPage: React.FC = () => {
           </div>
         )}
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+              </div>
+              <DialogTitle className="text-xl">Delete Driver</DialogTitle>
+            </div>
+            <DialogDescription className="text-base pt-2">
+              Are you sure you want to delete{' '}
+              <span className="font-semibold text-slate-900">{driverToDelete?.user.full_name}</span>?
+              <br />
+              <br />
+              This action cannot be undone. All data associated with this driver including:
+              <ul className="list-disc list-inside mt-2 ml-2 space-y-1">
+                <li>Driver profile and account information</li>
+                <li>Vehicle information and registration</li>
+                <li>Verification documents and history</li>
+                <li>Trip history and earnings records</li>
+                <li>Rating and review data</li>
+              </ul>
+              <br />
+              will be permanently removed from the system.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={handleDeleteCancel}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDeleteConfirm}
+              disabled={deleting}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {deleting ? (
+                <>
+                  <RefreshCw className="mr-2 animate-spin" size={16} />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2" size={16} />
+                  Delete Driver
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

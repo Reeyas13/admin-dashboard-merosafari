@@ -22,6 +22,11 @@ class UserService {
   async getUser(userId: string): Promise<GetUserResponse> {
     return api.get<GetUserResponse>(`/api/v1/admin/users/${userId}`);
   }
+
+  async deleteUser(userId: string): Promise<void> {
+    //@ts-ignore
+    return api.delete(`/api/v1/admin/users/${userId}`);
+  }
 }
 
 export const userService = new UserService();
