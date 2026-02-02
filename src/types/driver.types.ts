@@ -23,7 +23,16 @@ export interface PendingVerification {
   submitted_at: string;
   approved_documents?: number;
 }
-
+export interface DocumentUpdateRequest {
+  document_image?: File;
+  document_number?: string;
+  vehicle_model?: string;
+  vehicle_color?: string;
+  certification_number?: string;
+  manufacture_year?: string;
+  expiry_date?: string;
+  
+}
 export interface PendingVerificationsResponse {
   total: number;
   verifications: PendingVerification[];
