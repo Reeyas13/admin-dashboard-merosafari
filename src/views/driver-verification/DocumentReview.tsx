@@ -14,7 +14,6 @@ import {
   User,
   File,
   Edit,
-  Trash2
 } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as Avatar from '@radix-ui/react-avatar';
@@ -180,19 +179,7 @@ const DocumentReview: React.FC = () => {
     }
   };
 
-  const handleDeleteDocument = async (documentId: string) => {
-    if (!confirm('Are you sure you want to delete this document? This action cannot be undone.')) {
-      return;
-    }
 
-    try {
-      await driverService.deleteDocument(documentId);
-      toast.success('Document deleted successfully');
-      fetchVerificationDetails();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to delete document');
-    }
-  };
 
   const getDocumentIcon = (documentType: string) => {
     const icons: Record<string, React.ReactNode> = {
