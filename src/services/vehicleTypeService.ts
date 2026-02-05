@@ -39,7 +39,7 @@ class VehicleTypeService {
    * Get a specific vehicle type by ID
    */
   async getVehicleTypeById(id: string): Promise<VehicleType> {
-    return api.get<VehicleType>(`${this.basePath}/admin/vehicle-types/${id}`);
+    return api.get<VehicleType>(`${this.basePath}/vehicle-types/${id}`);
   }
 
   /**
@@ -52,7 +52,7 @@ class VehicleTypeService {
     const isFormData = data instanceof FormData;
     
     return api.put<CreateVehicleTypeResponse>(
-      `${this.basePath}/admin/vehicle-types/${id}`,
+      `${this.basePath}/vehicle-types/${id}`,
       data,
       isFormData ? {
         headers: {
@@ -66,7 +66,7 @@ class VehicleTypeService {
    * Delete a vehicle type
    */
   async deleteVehicleType(id: string): Promise<any> {
-    return api.delete(`${this.basePath}/admin/vehicle-types/${id}`);
+    return api.delete(`${this.basePath}/vehicle-types/${id}`);
   }
 }
 

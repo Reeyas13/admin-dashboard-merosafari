@@ -123,51 +123,7 @@ export const VehicleTypesList: React.FC<VehicleTypesListProps> = ({
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="rounded-lg border bg-card p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Total Types</p>
-              <p className="text-2xl font-bold mt-1">{vehicleTypes.length}</p>
-            </div>
-            <div className="h-12 w-12 rounded-full bg-lightprimary flex items-center justify-center">
-              <Users className="h-6 w-6 text-primary" />
-            </div>
-          </div>
-        </div>
-        <div className="rounded-lg border bg-card p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Active Types</p>
-              <p className="text-2xl font-bold mt-1">
-                {vehicleTypes.filter((v) => v.is_active).length}
-              </p>
-            </div>
-            <div className="h-12 w-12 rounded-full bg-lightsuccess flex items-center justify-center">
-              <Users className="h-6 w-6 text-success" />
-            </div>
-          </div>
-        </div>
-        <div className="rounded-lg border bg-card p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Avg Base Fare</p>
-              <p className="text-2xl font-bold mt-1">
-                ₹
-                {vehicleTypes.length > 0
-                  ? Math.round(
-                      vehicleTypes.reduce((sum, v) => sum + v.base_fare, 0) /
-                        vehicleTypes.length
-                    )
-                  : 0}
-              </p>
-            </div>
-            <div className="h-12 w-12 rounded-full bg-lightwarning flex items-center justify-center">
-              <DollarSign className="h-6 w-6 text-warning" />
-            </div>
-          </div>
-        </div>
-      </div>
+
 
       {/* Vehicle Types Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
