@@ -13,7 +13,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from 'src/components/ui/breadcrumb';
-import { Plus, Edit, Trash2, Users, DollarSign } from 'lucide-react';
+import { Plus, Edit, Trash2, Users } from 'lucide-react';
 
 interface VehicleTypesListProps {
   onEdit?: (vehicleType: VehicleType) => void;
