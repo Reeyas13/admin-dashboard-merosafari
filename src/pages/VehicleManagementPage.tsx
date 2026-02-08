@@ -44,7 +44,7 @@ import {
   Trash2,
   DollarSign,
   Award,
-  Loader2,
+
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { LocationVehicle } from '../types/locationVehicles';
