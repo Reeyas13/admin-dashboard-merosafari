@@ -1,6 +1,5 @@
 // pages/VehicleManagementPage.tsx
-
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -48,8 +47,6 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, useGLTF, Environment } from '@react-three/drei';
 import { LocationVehicle } from '../types/locationVehicles';
 import { VehicleType } from '../types/vehicleTypes';
 import { Boundary } from '../types/boundary';
@@ -57,114 +54,93 @@ import { locationVehicleService } from '../services/locationVehicleService';
 import { vehicleTypeService } from '../services/vehicleTypeService';
 import { boundaryService } from '../services/boundaryService';
 
-// 3D Model Component
-const Model3D: React.FC<{ modelUrl: string }> = ({ modelUrl }) => {
-  const { scene } = useGLTF(modelUrl);
-  return <primitive object={scene} scale={2} />;
-};
-
 // Vehicle Preview Component
-const VehiclePreview: React.FC<{ vehicleType: VehicleType | null }> = ({ vehicleType }) => {
+const VehiclePreview: React.FC<{ vehicleType: VehicleType | null }> = ({
+  vehicleType,
+}) => {
   if (!vehicleType) {
     return (
-      <div className="h-80 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 rounded-xl flex items-center justify-center border-2 border-dashed border-slate-300 dark:border-slate-600">
-        <div className="text-center text-muted-foreground">
-          <Car className="h-16 w-16 mx-auto mb-3 opacity-40" />
-          <p className="text-sm font-medium">Select a vehicle type</p>
-          <p className="text-xs mt-1 opacity-70">Preview will appear here</p>
-        </div>
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+        <Car className="w-16 h-16 text-gray-300 mb-4" />
+        <p className="text-gray-500 font-medium">Select a vehicle type</p>
+        <p className="text-gray-400 text-sm mt-2">
+          Preview will appear here
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-5">
-      {/* 3D Model Preview */}
-      {vehicleType.model_url && (
-        <div className="h-80 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-xl overflow-hidden shadow-xl border border-slate-700">
-          <Suspense
-            fallback={
-              <div className="h-full flex items-center justify-center">
-                <div className="text-center text-white">
-                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 opacity-70" />
-                  <p className="text-sm opacity-70">Loading 3D model...</p>
-                </div>
-              </div>
-            }
-          >
-            <Canvas camera={{ position: [3, 2, 3], fov: 45 }}>
-              <ambientLight intensity={0.6} />
-              <directionalLight position={[10, 10, 5]} intensity={1.2} />
-              <directionalLight position={[-10, -10, -5]} intensity={0.3} />
-              <Model3D modelUrl={import.meta.env.VITE_API_URL + vehicleType.model_url} />
-              <OrbitControls 
-                enableZoom={true} 
-                autoRotate 
-                autoRotateSpeed={1.5}
-                minDistance={2}
-                maxDistance={10}
-                enablePan={false}
-              />
-              <Environment preset="sunset" />
-            </Canvas>
-          </Suspense>
-        </div>
-      )}
-
-      {/* 2D Image Preview */}
-      {vehicleType.logo_url && (
-        <div className="relative">
+    <div className="space-y-4">
+      {/* Vehicle Image Preview */}
+      {vehicleType.logo_url ? (
+        <div className="rounded-lg border-2 border-gray-200 overflow-hidden bg-gray-50 flex items-center justify-center p-8">
           <img
-            src={import.meta.env.VITE_API_URL + vehicleType.logo_url}
+            src={ `${import.meta.env.VITE_API_URL}`+vehicleType.logo_url}
             alt={vehicleType.name}
-            className="w-full h-32 object-contain bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800"
+            className="max-w-full max-h-64 object-contain"
           />
-          <Badge className="absolute top-3 right-3 shadow-md">{vehicleType.name}</Badge>
+        </div>
+      ) : (
+        <div className="rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center p-12">
+          <div className="text-center">
+            <Car className="w-20 h-20 text-gray-400 mx-auto mb-3" />
+            <p className="text-gray-500 text-sm">No image available</p>
+          </div>
         </div>
       )}
 
       {/* Vehicle Details Card */}
-      <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
-        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-          Vehicle Details
-        </h4>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div className="space-y-1">
-            <div className="text-muted-foreground text-xs">Vehicle Name</div>
-            <div className="font-semibold">{vehicleType.name}</div>
+      <Card className="p-4 bg-gray-50">
+        <h4 className="font-semibold mb-3 text-gray-900">Vehicle Details</h4>
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-600">Vehicle Name</span>
+            <span className="font-medium text-gray-900">
+              {vehicleType.name}
+            </span>
           </div>
-          <div className="space-y-1">
-            <div className="text-muted-foreground text-xs">Capacity</div>
-            <div className="font-semibold">{vehicleType.no_of_seats} seats</div>
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-600">Capacity</span>
+            <span className="font-medium text-gray-900">
+              {vehicleType.no_of_seats} seats
+            </span>
           </div>
-          <div className="space-y-1">
-            <div className="text-muted-foreground text-xs">Per KM Rate</div>
-            <div className="font-semibold text-green-600 dark:text-green-400">
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-600">Per KM Rate</span>
+            <span className="font-medium text-gray-900">
               Rs. {vehicleType.per_km_rate}/km
-            </div>
+            </span>
           </div>
-          <div className="space-y-1">
-            <div className="text-muted-foreground text-xs">Status</div>
-            <Badge variant={vehicleType.is_active ? 'success' : 'error'}>
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-600">Status</span>
+            <Badge variant={vehicleType.is_active ? 'default' : 'secondary'}>
               {vehicleType.is_active ? 'Active' : 'Inactive'}
             </Badge>
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };
 
 export const VehicleManagementPage: React.FC = () => {
   const navigate = useNavigate();
+
   const [boundaries, setBoundaries] = useState<Boundary[]>([]);
-  const [selectedBoundary, setSelectedBoundary] = useState<Boundary | null>(null);
+  const [selectedBoundary, setSelectedBoundary] = useState<Boundary | null>(
+    null
+  );
   const [vehicles, setVehicles] = useState<LocationVehicle[]>([]);
-  const [availableVehicleTypes, setAvailableVehicleTypes] = useState<VehicleType[]>([]);
-  const [selectedVehicleTypePreview, setSelectedVehicleTypePreview] = useState<VehicleType | null>(null);
+  const [availableVehicleTypes, setAvailableVehicleTypes] = useState<
+    VehicleType[]
+  >([]);
+  const [selectedVehicleTypePreview, setSelectedVehicleTypePreview] =
+    useState<VehicleType | null>(null);
   const [loading, setLoading] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+
   const [formData, setFormData] = useState({
     vehicle_type_id: '',
     is_enabled: true,
@@ -187,7 +163,9 @@ export const VehicleManagementPage: React.FC = () => {
   // Update preview when vehicle type is selected
   useEffect(() => {
     if (formData.vehicle_type_id) {
-      const selectedType = availableVehicleTypes.find(vt => vt.id === formData.vehicle_type_id);
+      const selectedType = availableVehicleTypes.find(
+        (vt) => vt.id === formData.vehicle_type_id
+      );
       setSelectedVehicleTypePreview(selectedType || null);
     } else {
       setSelectedVehicleTypePreview(null);
@@ -198,8 +176,9 @@ export const VehicleManagementPage: React.FC = () => {
     try {
       setLoading(true);
       const response = await boundaryService.getBoundaries();
-      const activeBoundaries = response.boundaries.filter(b => b.is_active);
+      const activeBoundaries = response.boundaries.filter((b) => b.is_active);
       setBoundaries(activeBoundaries);
+
       if (activeBoundaries.length > 0 && !selectedBoundary) {
         setSelectedBoundary(activeBoundaries[0]);
       }
@@ -212,13 +191,14 @@ export const VehicleManagementPage: React.FC = () => {
 
   const loadVehicles = async () => {
     if (!selectedBoundary) return;
+
     try {
       setLoading(true);
       const response = await locationVehicleService.getVehiclesForLocation(
         selectedBoundary.id,
         false
       );
-      console.log({ response })
+      console.log({ response });
       setVehicles(response.vehicles);
     } catch (error: any) {
       console.error('Failed to load vehicles:', error);
@@ -230,7 +210,7 @@ export const VehicleManagementPage: React.FC = () => {
   const loadAvailableVehicleTypes = async () => {
     try {
       const response = await vehicleTypeService.getVehicleTypes(true);
-      console.log({ response })
+      console.log({ response });
       setAvailableVehicleTypes(response.vehicle_types);
     } catch (error: any) {
       console.error('Failed to load vehicle types:', error);
@@ -239,6 +219,7 @@ export const VehicleManagementPage: React.FC = () => {
 
   const handleAddVehicle = async () => {
     if (!selectedBoundary) return;
+
     try {
       await locationVehicleService.addVehicleToLocation(
         selectedBoundary.id,
@@ -246,6 +227,7 @@ export const VehicleManagementPage: React.FC = () => {
       );
       setShowAddDialog(false);
       loadVehicles();
+
       // Reset form
       setFormData({
         vehicle_type_id: '',
@@ -260,24 +242,17 @@ export const VehicleManagementPage: React.FC = () => {
     }
   };
 
-  // const handleToggleVehicle = async (vehicleId: string) => {
-  //   if (!selectedBoundary) return;
-  //   try {
-  //     await locationVehicleService.toggleVehicleStatus(
-  //       selectedBoundary.id,
-  //       vehicleId
-  //     );
-  //     loadVehicles();
-  //   } catch (error: any) {
-  //     alert(error.message || 'Failed to toggle vehicle status');
-  //   }
-  // };
-
   const handleDeleteVehicle = async (vehicleId: string) => {
     if (!selectedBoundary) return;
-    if (!confirm('Are you sure you want to remove this vehicle type from this location?')) {
+
+    if (
+      !confirm(
+        'Are you sure you want to remove this vehicle type from this location?'
+      )
+    ) {
       return;
     }
+
     try {
       await locationVehicleService.removeVehicleFromLocation(
         selectedBoundary.id,
@@ -289,455 +264,425 @@ export const VehicleManagementPage: React.FC = () => {
     }
   };
 
-  const filteredBoundaries = boundaries.filter(b =>
-    b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    b.district.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredBoundaries = boundaries.filter(
+    (b) =>
+      b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      b.district.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <TooltipProvider>
-      <div className="p-6 space-y-6">
-        {/* Breadcrumb */}
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/admin">Dashboard</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/map">Locations</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Vehicle Management</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+    <div className="min-h-screen bg-gray-50 p-6">
+      {/* Breadcrumb */}
+      <Breadcrumb className="mb-6">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/">Dashboard</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/locations">Locations</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Vehicle Management</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Car className="h-7 w-7 text-primary" />
-              Vehicle Management
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Configure available vehicle types for each service area
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate('/pricing')}
-                >
-                  <DollarSign className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Manage Pricing</p>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate('/incentives')}
-                >
-                  <Award className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Manage Incentives</p>
-              </TooltipContent>
-            </Tooltip>
-            <Button onClick={loadVehicles} variant="outline" size="sm" disabled={loading}>
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-          </div>
+      {/* Header */}
+      <div className="flex justify-between items-start mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Vehicle Management
+          </h1>
+          <p className="text-gray-600">
+            Configure available vehicle types for each service area
+          </p>
         </div>
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            onClick={() => navigate('/pricing')}
+          >
+            <DollarSign className="w-4 h-4 mr-2" />
+            Manage Pricing
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/incentives')}
+          >
+            <Award className="w-4 h-4 mr-2" />
+            Manage Incentives
+          </Button>
+          <Button variant="outline" onClick={loadVehicles}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
+      </div>
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Sidebar - Location Selector */}
-          <div className="lg:col-span-3 space-y-4">
-            <Card className="p-4">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-semibold text-foreground mb-2 flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-primary" />
-                    Select Location
-                  </h3>
-                  <Input
-                    placeholder="Search locations..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="mb-3"
-                  />
-                </div>
-
-                <div className="space-y-2 max-h-[600px] overflow-y-auto">
-                  {filteredBoundaries.map((boundary) => (
-                    <div
-                      key={boundary.id}
-                      className={`p-3 rounded-lg border cursor-pointer transition-all hover:shadow-md ${selectedBoundary?.id === boundary.id
-                        ? 'border-primary bg-lightprimary'
-                        : 'border-border bg-card'
-                        }`}
-                      onClick={() => setSelectedBoundary(boundary)}
-                    >
-                      <div className="font-medium text-sm">{boundary.name}</div>
-                      <div className="text-xs text-muted-foreground mt-1">
+      {/* Main Content */}
+      <div className="grid grid-cols-12 gap-6">
+        {/* Sidebar - Location Selector */}
+        <div className="col-span-3">
+          <Card className="p-4">
+            <h2 className="text-lg font-semibold mb-4">Select Location</h2>
+            <Input
+              placeholder="Search locations..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="mb-3"
+            />
+            <div className="space-y-2 max-h-[600px] overflow-y-auto">
+              {filteredBoundaries.map((boundary) => (
+                <Card
+                  key={boundary.id}
+                  className={`p-3 cursor-pointer transition-all hover:shadow-md ${
+                    selectedBoundary?.id === boundary.id
+                      ? 'border-2 border-blue-500 bg-blue-50'
+                      : ''
+                  }`}
+                  onClick={() => setSelectedBoundary(boundary)}
+                >
+                  <div className="flex items-start gap-2">
+                    <MapPin className="w-4 h-4 mt-1 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{boundary.name}</p>
+                      <p className="text-xs text-gray-500 truncate">
                         {boundary.district}, {boundary.province}
-                      </div>
-                      <Badge variant="success" className="mt-2 text-xs">
+                      </p>
+                      <Badge
+                        variant="default"
+                        className="mt-1 text-xs"
+                      >
                         Active
                       </Badge>
                     </div>
-                  ))}
-                </div>
-
-                {filteredBoundaries.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground text-sm">
-                    No active locations found
                   </div>
-                )}
-              </div>
-            </Card>
+                </Card>
+              ))}
+              {filteredBoundaries.length === 0 && (
+                <p className="text-center text-gray-500 py-8">
+                  No active locations found
+                </p>
+              )}
+            </div>
 
             {selectedBoundary && (
-              <Card className="p-4 bg-lightprimary border-primary">
-                <h4 className="font-semibold text-primary text-sm mb-2">Selected Location</h4>
-                <div className="text-sm space-y-1">
-                  <div className="font-medium">{selectedBoundary.name}</div>
-                  <div className="text-muted-foreground">
+              <Card className="p-3 mt-4 bg-blue-50 border-blue-200">
+                <p className="text-xs text-gray-600 mb-1">Selected Location</p>
+                <p className="font-semibold text-sm">{selectedBoundary.name}</p>
+                <div className="flex gap-2 mt-2">
+                  <Badge variant="outline" className="text-xs">
                     {selectedBoundary.type}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {selectedBoundary.district}, {selectedBoundary.province}
-                  </div>
+                  </Badge>
                 </div>
-              </Card>
-            )}
-          </div>
-
-          {/* Main Content - Vehicles List */}
-          <div className="lg:col-span-9 space-y-4">
-            {selectedBoundary ? (
-              <>
-                <Card className="p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <h2 className="text-xl font-semibold text-foreground">
-                        Vehicles in {selectedBoundary.name}
-                      </h2>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {vehicles.length} vehicle type{vehicles.length !== 1 ? 's' : ''} configured
-                      </p>
-                    </div>
-                    <Button onClick={() => setShowAddDialog(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Vehicle Type
-                    </Button>
-                  </div>
-
-                  {loading ? (
-                    <div className="space-y-3">
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="border rounded-lg p-4 animate-pulse">
-                          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : vehicles.length === 0 ? (
-                    <div className="text-center py-12">
-                      <Car className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-foreground mb-2">
-                        No vehicles configured
-                      </h3>
-                      <p className="text-muted-foreground mb-4">
-                        Add vehicle types to enable ride services in this area
-                      </p>
-                      <Button onClick={() => setShowAddDialog(true)}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add First Vehicle
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 gap-4">
-                      {vehicles.map((vehicle) => (
-                        <Card key={vehicle.id} className="p-5 hover:shadow-lg transition-shadow">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-3">
-                                <div className="h-12 w-12 rounded-lg bg-lightprimary flex items-center justify-center">
-                                  {vehicle.vehicle_type?.logo_url ? (
-                                    <img
-                                      src={import.meta.env.VITE_API_URL + vehicle.vehicle_type.logo_url}
-                                      alt={vehicle.vehicle_type_name}
-                                      className="h-10 w-10 object-contain"
-                                    />
-                                  ) : (
-                                    <Car className="h-6 w-6 text-primary" />
-                                  )}
-                                </div>
-                                <div>
-                                  <h3 className="font-semibold text-foreground text-lg">
-                                    {vehicle.vehicle_type_name || 'Unknown Vehicle'}
-                                  </h3>
-                                  {vehicle.vehicle_type?.slug && (
-                                    <p className="text-sm text-muted-foreground">
-                                      {vehicle.vehicle_type.slug}
-                                    </p>
-                                  )}
-                                </div>
-                                <Badge variant={vehicle.is_enabled ? 'success' : 'error'}>
-                                  {vehicle.is_enabled ? 'Active' : 'Inactive'}
-                                </Badge>
-                              </div>
-
-                              <div className="grid grid-cols-3 gap-4 text-sm">
-                                <div className="flex items-center gap-2">
-                                  <Users className="h-4 w-4 text-muted-foreground" />
-                                  <div>
-                                    <div className="text-muted-foreground text-xs">Min Drivers</div>
-                                    <div className="font-medium">
-                                      {vehicle.min_drivers_required}
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Clock className="h-4 w-4 text-muted-foreground" />
-                                  <div>
-                                    <div className="text-muted-foreground text-xs">Operating Hours</div>
-                                    <div className="font-medium">
-                                      {vehicle.operating_hours_start.slice(0, 5)} - {vehicle.operating_hours_end.slice(0, 5)}
-                                    </div>
-                                  </div>
-                                </div>
-                                {vehicle.vehicle_type?.no_of_seats && (
-                                  <div className="flex items-center gap-2">
-                                    <Users className="h-4 w-4 text-muted-foreground" />
-                                    <div>
-                                      <div className="text-muted-foreground text-xs">Capacity</div>
-                                      <div className="font-medium">
-                                        {vehicle.vehicle_type.no_of_seats} seats
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="flex gap-2">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={() => navigate(`/pricing?vehicle=${vehicle.id}`)}
-                                  >
-                                    <DollarSign className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Configure Pricing</p>
-                                </TooltipContent>
-                              </Tooltip>
-
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="lighterror"
-                                    size="icon"
-                                    onClick={() => handleDeleteVehicle(vehicle.id)}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Remove Vehicle</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </Card>
-              </>
-            ) : (
-              <Card className="p-12 text-center">
-                <MapPin className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-2">
-                  Select a Location
-                </h3>
-                <p className="text-muted-foreground">
-                  Choose a location from the sidebar to manage its vehicle types
+                <p className="text-xs text-gray-600 mt-2">
+                  {selectedBoundary.district}, {selectedBoundary.province}
                 </p>
               </Card>
             )}
-          </div>
+          </Card>
         </div>
 
-        {/* Add Vehicle Dialog - Made larger */}
-        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader className="pb-4 border-b">
-              <DialogTitle className="text-xl flex items-center gap-2">
-                <Car className="h-5 w-5 text-primary" />
-                Add Vehicle Type to {selectedBoundary?.name}
-              </DialogTitle>
-            </DialogHeader>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 py-6">
-              {/* Left Column - Form */}
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="vehicle_type" className="text-sm font-medium">
-                    Vehicle Type
-                  </Label>
-                  <Select
-                    value={formData.vehicle_type_id}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, vehicle_type_id: value })
-                    }
-                  >
-                    <SelectTrigger className="h-11">
-                      <SelectValue placeholder="Select a vehicle type..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableVehicleTypes.map((vt) => (
-                        <SelectItem key={vt.id} value={vt.id} className="py-3">
-                          <div className="flex items-center gap-3">
-                            <span className="font-medium">{vt.name}</span>
-                            <span className="text-muted-foreground">•</span>
-                            <span className="text-muted-foreground">{vt.no_of_seats} seats</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="min_drivers" className="text-sm font-medium">
-                    Minimum Drivers Required
-                  </Label>
-                  <Input
-                    id="min_drivers"
-                    type="number"
-                    min={1}
-                    value={formData.min_drivers_required}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        min_drivers_required: parseInt(e.target.value) || 1,
-                      })
-                    }
-                    className="h-11"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Minimum number of drivers needed for this vehicle type in this location
+        {/* Main Content - Vehicles List */}
+        <div className="col-span-9">
+          {selectedBoundary ? (
+            <>
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h2 className="text-xl font-semibold">
+                    Vehicles in {selectedBoundary.name}
+                  </h2>
+                  <p className="text-sm text-gray-600">
+                    {vehicles.length} vehicle type
+                    {vehicles.length !== 1 ? 's' : ''} configured
                   </p>
                 </div>
+                <Button onClick={() => setShowAddDialog(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Vehicle Type
+                </Button>
+              </div>
 
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Operating Hours</Label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="start_time" className="text-xs text-muted-foreground">
-                        Start Time
-                      </Label>
-                      <Input
-                        id="start_time"
-                        type="time"
-                        value={formData.operating_hours_start.slice(0, 5)}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            operating_hours_start: `${e.target.value}:00`,
-                          })
-                        }
-                        className="h-11"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="end_time" className="text-xs text-muted-foreground">
-                        End Time
-                      </Label>
-                      <Input
-                        id="end_time"
-                        type="time"
-                        value={formData.operating_hours_end.slice(0, 5)}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            operating_hours_end: `${e.target.value}:00`,
-                          })
-                        }
-                        className="h-11"
-                      />
-                    </div>
-                  </div>
+              {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[1, 2, 3].map((i) => (
+                    <Card key={i} className="p-4">
+                      <div className="animate-pulse space-y-3">
+                        <div className="h-32 bg-gray-200 rounded"></div>
+                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                      </div>
+                    </Card>
+                  ))}
                 </div>
-
-                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="enabled" className="text-sm font-medium cursor-pointer">
-                      Enable immediately
-                    </Label>
-                    <p className="text-xs text-muted-foreground">
-                      Make this vehicle available for booking right away
+              ) : vehicles.length === 0 ? (
+                <Card className="p-12">
+                  <div className="text-center">
+                    <Car className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">
+                      No vehicles configured
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                      Add vehicle types to enable ride services in this area
                     </p>
+                    <Button onClick={() => setShowAddDialog(true)}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add First Vehicle
+                    </Button>
                   </div>
-                  <Switch
-                    id="enabled"
-                    checked={formData.is_enabled}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, is_enabled: checked })
-                    }
-                  />
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {vehicles.map((vehicle) => (
+                    <Card key={vehicle.id} className="p-4 hover:shadow-lg transition-shadow">
+                      <div className="flex items-start gap-3 mb-3">
+                        {vehicle.vehicle_type?.logo_url ? (
+                          <img
+                            src={ `${import.meta.env.VITE_API_URL}${vehicle.vehicle_type.logo_url}`}
+                            alt={vehicle.vehicle_type_name || 'Vehicle'}
+                            className="w-16 h-16 object-contain rounded"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center">
+                            <Car className="w-8 h-8 text-gray-400" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold truncate">
+                            {vehicle.vehicle_type_name || 'Unknown Vehicle'}
+                          </h3>
+                          {vehicle.vehicle_type?.slug && (
+                            <p className="text-xs text-gray-500">
+                              {vehicle.vehicle_type.slug}
+                            </p>
+                          )}
+                          <Badge
+                            variant={vehicle.is_enabled ? 'default' : 'secondary'}
+                            className="mt-1"
+                          >
+                            {vehicle.is_enabled ? 'Active' : 'Inactive'}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Users className="w-4 h-4" />
+                          <span className="font-medium">Min Drivers:</span>
+                          <span>{vehicle.min_drivers_required}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Clock className="w-4 h-4" />
+                          <span className="font-medium">Operating Hours:</span>
+                          <span>
+                            {vehicle.operating_hours_start.slice(0, 5)} -{' '}
+                            {vehicle.operating_hours_end.slice(0, 5)}
+                          </span>
+                        </div>
+                        {vehicle.vehicle_type?.no_of_seats && (
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <Car className="w-4 h-4" />
+                            <span className="font-medium">Capacity:</span>
+                            <span>{vehicle.vehicle_type.no_of_seats} seats</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2 mt-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() =>
+                            navigate(`/pricing?vehicle=${vehicle.id}`)
+                          }
+                        >
+                          <DollarSign className="w-3 h-3 mr-1" />
+                          Configure Pricing
+                        </Button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteVehicle(vehicle.id)}
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Remove Vehicle</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <Card className="p-12">
+              <div className="text-center">
+                <MapPin className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">
+                  Select a Location
+                </h3>
+                <p className="text-gray-600">
+                  Choose a location from the sidebar to manage its vehicle types
+                </p>
+              </div>
+            </Card>
+          )}
+        </div>
+      </div>
+
+      {/* Add Vehicle Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Add Vehicle Type to {selectedBoundary?.name}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="grid grid-cols-2 gap-6">
+            {/* Left Column - Form */}
+            <div className="space-y-4">
+              <div>
+                <Label>Vehicle Type</Label>
+                <Select
+                  value={formData.vehicle_type_id}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, vehicle_type_id: value })
+                  }
+                >
+                  <SelectTrigger className="h-11">
+                    <SelectValue placeholder="Select vehicle type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableVehicleTypes.map((vt) => (
+                      <SelectItem key={vt.id} value={vt.id}>
+                        <div className="flex items-center gap-2">
+                          {vt.logo_url && (
+                            <img
+                              src={`${import.meta.env.VITE_API_URL}${vt.logo_url}`}
+                              alt={vt.name}
+                              className="w-6 h-6 object-contain"
+                            />
+                          )}
+                          <span>
+                            {vt.name} • {vt.no_of_seats} seats
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Minimum Drivers Required</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  value={formData.min_drivers_required}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      min_drivers_required: parseInt(e.target.value) || 1,
+                    })
+                  }
+                  className="h-11"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Minimum number of drivers needed for this vehicle type in this
+                  location
+                </p>
+              </div>
+
+              <div>
+                <Label>Operating Hours</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-gray-600">Start Time</Label>
+                    <Input
+                      type="time"
+                      value={formData.operating_hours_start.slice(0, 5)}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          operating_hours_start: `${e.target.value}:00`,
+                        })
+                      }
+                      className="h-11"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-gray-600">End Time</Label>
+                    <Input
+                      type="time"
+                      value={formData.operating_hours_end.slice(0, 5)}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          operating_hours_end: `${e.target.value}:00`,
+                        })
+                      }
+                      className="h-11"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Right Column - Preview */}
-              <div className="space-y-3">
-                <Label className="text-sm font-medium">Vehicle Preview</Label>
-                <VehiclePreview vehicleType={selectedVehicleTypePreview} />
+              <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div>
+                  <Label>Enable immediately</Label>
+                  <p className="text-xs text-gray-500">
+                    Make this vehicle available for booking right away
+                  </p>
+                </div>
+                <Switch
+                  checked={formData.is_enabled}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, is_enabled: checked })
+                  }
+                />
               </div>
             </div>
 
-            <DialogFooter className="pt-4 border-t gap-3">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowAddDialog(false);
-                  setSelectedVehicleTypePreview(null);
-                }}
-                className="px-6"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleAddVehicle}
-                disabled={!formData.vehicle_type_id}
-                className="px-6"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Vehicle
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-    </TooltipProvider>
+            {/* Right Column - Preview */}
+            <div>
+              <Label className="mb-3 block">Vehicle Preview</Label>
+              <VehiclePreview vehicleType={selectedVehicleTypePreview} />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowAddDialog(false);
+                setSelectedVehicleTypePreview(null);
+              }}
+              className="px-6"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddVehicle}
+              disabled={!formData.vehicle_type_id}
+              className="px-6"
+            >
+              Add Vehicle
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 
